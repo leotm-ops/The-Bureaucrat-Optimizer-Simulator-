@@ -1,4 +1,4 @@
-/package estudantes.entidades;
+package estudantes.entidades;
 
 import professor.entidades.CodigoCurso;
 

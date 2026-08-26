@@ -1,7 +1,7 @@
 package estudantes.entidades;
 
 import java.util.Objects;
-import professor.entidades.CodigoCurso;s
+import professor.entidades.CodigoCurso;
 
 public class Norma extends DocumentoAdministrativo{
     private int numero;
