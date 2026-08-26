@@ -22,7 +22,7 @@ public abstract class Registro extends DocumentoAcademico {
         return matricula;
     }
 
-    /* começo de código gerado por IA */
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -32,7 +32,7 @@ public abstract class Registro extends DocumentoAcademico {
         Registro registro = (Registro) o;
         return matricula == registro.matricula && Objects.equals(estudante, registro.estudante);
     }
-    /* fim de código gerado por IA */
+
     
     @Override
     public int hashCode() {
