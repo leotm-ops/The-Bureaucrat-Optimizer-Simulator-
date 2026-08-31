@@ -4,7 +4,6 @@ import java.util.Objects;
 import professor.entidades.CodigoCurso;
 
 public abstract class Registro extends DocumentoAcademico {
-    
     private String estudante;
     private long matricula;
 
@@ -21,7 +20,6 @@ public abstract class Registro extends DocumentoAcademico {
     public long getMatricula() {
         return matricula;
     }
-
 
     @Override
     public boolean equals(Object o) {

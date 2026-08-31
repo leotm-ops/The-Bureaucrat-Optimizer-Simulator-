@@ -10,8 +10,12 @@ import professor.entidades.*;
  * processos, mas eles não serão invocados diretamente pelo simulador e devem
  * respeitar propriedades de encapsulamento e coesão.
  * 
- * @author coloque os nomes dos autores aqui
+ * @autor Lara Moreira
+ * @autor Leonardo Maraschin
+ * @autor Ana Laura Führ
+ *
  */
+
 public class Burocrata {
     private int estresse = 0;
     private Mesa mesa;
@@ -55,14 +59,76 @@ public class Burocrata {
      * @see professor.entidades.Universidade#removerDocumentoDoMonteDoCurso(estudantes.entidades.Documento, professor.entidades.CodigoCurso)
      * @see professor.entidades.Universidade#devolverDocumentoParaMonteDoCurso(estudantes.entidades.Documento, professor.entidades.CodigoCurso) 
      */
-    public void trabalhar(){
-        
+    public void trabalhar() {
+        // --  PRIMEIRA VERSAO DE LOGICA DE TRABALHO DO BUROCRATA --
+        /* (4) Uma Portaria ou um Edital com 100 ou mais paginas eh um “documento substancial” e
+        deve ser despachado em um processo sem qualquer outro documento junto. Contudo,
+        Portarias e Editais que nao sejam mais validos podem ir junto de outros documentos mesmo
+        que sejam substanciais.
+        Aumentar o estresse eh pior do que ter uma eficiencia baixa, pois prezamos pela qualidade de
+        vida das pessoas no servico publico
+
+        seguindo essa especificacao, essa versao apenas despacha diretamente portarias e editais validos.
+        a secretaria aceita esses despaches e o burocrata nunca eh estressado, mas despacha poucos processos
+
+         */
+
+        Processo[] processos = mesa.getProcessos();
+
+        // percorre os documentos de todos os cursos da universidade
+        for (CodigoCurso codigo : CodigoCurso.values()) {
+            Documento[] documentos = universidade.pegarCopiaDoMonteDoCurso(codigo);
+
+            for (Documento doc : documentos) {
+                boolean SubstancialEValido = false;
+
+                // verifica se eh edital ou portaria e se eh substancial e valido, se for, acende a flag
+                if (doc instanceof Edital) {
+                    Edital edital = (Edital) doc;
+                    if (edital.getPaginas() >= 100 && edital.isValido()) {
+                        SubstancialEValido = true;
+                    }
+                } else if (doc instanceof Portaria) {
+                    Portaria portaria = (Portaria) doc;
+                    if (portaria.getPaginas() >= 100 && portaria.isValido()) {
+                        SubstancialEValido = true;
+                    }
+                }
+
+                // se encontrou um doc subst e valido p despachar:
+                if (SubstancialEValido) {
+                    // tenta remover o doc do monte do curso
+                    boolean foiRemovido = universidade.removerDocumentoDoMonteDoCurso(doc, codigo);
+
+                    if (foiRemovido == true ) {
+                        boolean despachado = false;
+
+                        // coloca o doc em um processo e despacha
+                        for (int i = 0; i < processos.length; i++) {
+                            if (processos[i] != null) {
+                                processos[i].adicionarDocumento(doc);
+                                universidade.despachar(processos[i]);
+                                despachado = true;
+                                break;
+                            }
+                        }
+                        // se nao tinha processo p colocar, devolve o doc p monte
+                        if (despachado == false) {
+                            universidade.devolverDocumentoParaMonteDoCurso(doc, codigo);
+                        }
+                    }
+
+                }
+            }
+        }
     }
-    
+
+
     /**
      * Retorna o valor atual de estresse do burocrata.
      * @return estresse atual
      */
+
     public int getEstresse(){
         return this.estresse;
     }
