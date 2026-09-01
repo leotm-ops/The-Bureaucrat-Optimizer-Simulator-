@@ -410,7 +410,7 @@ public class SimuladorGUI extends JFrame {
             double eficiencia = 1.0 *
                     (universidade.contarDocumentosDespachados() / (double) universidade.contarProcessosDespachados()) *
                     (universidade.contarDocumentosDespachados() / (double) universidade.contarDocumentosCriados()) /
-                    Math.sqrt(universidade.verificarEstresseDoBurocrata() + 1);
+                    (universidade.verificarEstresseDoBurocrata() + 1);
 
             // Exibe janela com o resultado
             SwingUtilities.invokeLater(() -> {
