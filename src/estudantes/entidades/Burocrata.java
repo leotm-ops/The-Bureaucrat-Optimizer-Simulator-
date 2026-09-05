@@ -81,7 +81,7 @@ public class Burocrata {
         }
         //
         for(Processo processo : mesa.getProcessos()){
-            if(processo != null && processo.contarDocumentos() > 0 && calcularPaginasProcesso(processo) >= 230){
+            if(processo != null && processo.contarDocumentos() > 0 && calcularPaginasProcesso(processo) >= 250){
                 universidade.despachar(processo);
             }
         }
@@ -135,7 +135,7 @@ public class Burocrata {
                     processo.adicionarDocumento(doc);
 
                     // se o processo atingiu 200 pags
-                    if(calcularPaginasProcesso(processo) >= 230){
+                    if(calcularPaginasProcesso(processo) >= 250){
                         universidade.despachar(processo); // ja despacha p liberar a mesa p um novo processo
                     }
                     return true;
