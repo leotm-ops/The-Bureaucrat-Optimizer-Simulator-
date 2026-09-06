@@ -60,11 +60,29 @@ public class Burocrata {
      * @see professor.entidades.Universidade#devolverDocumentoParaMonteDoCurso(estudantes.entidades.Documento, professor.entidades.CodigoCurso) 
      */
 
-    //------ esse eh o unico metodo chamado pelo simulador, ele contem toda a logica de trabalho do burocrata
-    //       com metodos auxiliares -------
+    //------ esse eh o unico metodo chamado pelo simulador, ele contem toda a logica de trabalho do burocrata com metodos auxiliares -------
     public void trabalhar() {
+        // array para que o burocrata analise primeiro os docs de pos pois sao gerados com mais frequencia (empirico)
+        CodigoCurso[] ordemCursos = {
+                CodigoCurso.POS_GRADUACAO_COMPUTACAO, CodigoCurso.POS_GRADUACAO_ENGENHARIA_ELETRICA, CodigoCurso.POS_GRADUACAO_MICROELETRONICA, // prioridade p cursos de pos
+                CodigoCurso.GRADUACAO_BIOTECNOLOGIA, CodigoCurso.GRADUACAO_CIENCIA_DA_COMPUTACAO, CodigoCurso.GRADUACAO_CIENCIA_DE_DADOS,
+                CodigoCurso.GRADUACAO_CIENCIA_E_TECNOLOGIA, CodigoCurso.GRADUACAO_ENGENHARIA_DE_AUTOMACAO, CodigoCurso.GRADUACAO_ENGENHARIA_DE_COMPUTACAO, CodigoCurso.GRADUACAO_ENGENHARIA_ELETRICA  // cursos de grad depois
+        };
+
+        boolean processandoPos = true;
+
         // percorre os montes de todos os cursos
-        for(CodigoCurso codigo : CodigoCurso.values()){
+        for(CodigoCurso codigo : ordemCursos){
+            boolean atualEhPos = codigo.name().startsWith("POS_GRADUACAO");
+            if(processandoPos && !atualEhPos){ // se o processo atual eh de pos e pegou um doc de graduacao
+                for(Processo processoAtual : mesa.getProcessos()){
+                    if(processoAtual != null && processoAtual.contarDocumentos() > 0 && !temApenasAtas(processoAtual)){
+                        universidade.despachar(processoAtual); // despacha processo atual
+                    }
+                }
+                processandoPos = false; // sinaliza q nao esta mais em um processo de pos
+            }
+
             Documento[] documentos = universidade.pegarCopiaDoMonteDoCurso(codigo);
 
             // analisa cada documento um a um
@@ -75,20 +93,12 @@ public class Burocrata {
                 }
                 // se nao for, tenta alocar em algum processo da mesa
                 else {
-                    AlocaEDespachaDocComum(doc, codigo);
+                    alocaEDespachaDocComum(doc, codigo);
                 }
             }
         }
-        //
-        for(Processo processo : mesa.getProcessos()){
-            if(processo != null && processo.contarDocumentos() > 0 && calcularPaginasProcesso(processo) >= 250){
-                universidade.despachar(processo);
-            }
-        }
     }
-
     // ---------------------------------------------------------------------------------------------------------------------
-
 
     // metodo p achar um processo vazio para colocar documentos:
     private Processo encontrarProcessoVazio(){
@@ -103,7 +113,7 @@ public class Burocrata {
     }
 
 
-    // metodo responsavel por despachar documentossubstanciais validos
+    // metodo responsavel por despachar documentos substanciais validos:
     private boolean despacharDocSubstancial(Documento doc, CodigoCurso codigo){
         Processo processo = encontrarProcessoVazio(); // procura um processo vazio
 
@@ -123,8 +133,8 @@ public class Burocrata {
         return true;
     }
 
-    // esse metodo trata todos os documentos que nao sao substanciais
-    private boolean AlocaEDespachaDocComum(Documento doc, CodigoCurso codigo){
+    // esse metodo trata o despache de todos os documentos que nao sao substanciais:
+    private boolean alocaEDespachaDocComum(Documento doc, CodigoCurso codigo){
         Processo[] processosDaMesa = mesa.getProcessos();
 
         for(Processo processo : processosDaMesa){
@@ -135,7 +145,7 @@ public class Burocrata {
                     processo.adicionarDocumento(doc);
 
                     // se o processo atingiu 200 pags
-                    if(calcularPaginasProcesso(processo) >= 250){
+                    if(calcularPaginasProcesso(processo) >= 230 && !temApenasAtas(processo)){
                         universidade.despachar(processo); // ja despacha p liberar a mesa p um novo processo
                     }
                     return true;
@@ -145,26 +155,16 @@ public class Burocrata {
         return false;
     }
 
-    // esse metodo verifica se as regras para adicionar diferentes documentos em processos sao respeitadas
-    // e retorna true em caso afirmativo, para adicionar um novo doc em um processo
+    // esse metodo verifica se todas as regras para adicionar diferentes documentos em processos sao respeitadas
+    // e retorna true em caso afirmativo, possibilitando adicionar um novo doc em um processo
     private boolean podeAddDocumento(Documento documento, Processo processo, CodigoCurso codigo){
-        // Contudo, Portarias e Editais que não sejam mais válidos podem ir junto de outros documentos mesmo
+        // Contudo, Portarias e Editais que nao sejam mais validos podem ir junto de outros documentos mesmo
         // que sejam substanciais.
 
         if (ehSubstancialValido(documento) == true) { // (4)
             return false;
         }
-            /*
-        if (documento instanceof Norma) { // se o doc for uma norma
-            Norma norma = (Norma) documento; // o trata como norma para usar o metodo isValido()
 
-            // se for norma, mas nao for edital nem portaria e for invalida, eh rejeitada
-            if (!norma.isValido()) {
-                return false;
-            }
-
-        }
-            */
         // so pode adicionar documentos no proceso se respeitar as regras p nao estressar o burocrata
         if(!respeitaAcademicoAdministrativo(documento, processo) //(2)
                 || !respeitaGradEPos(documento, processo, codigo) //(1)
@@ -172,19 +172,15 @@ public class Burocrata {
                 || !respeitaRegraDiploma(documento, processo) //(6)
                 || !respeitaRegraAtas(documento, processo) // (4)
                 || !respeitaRegraAtestados(documento, processo) //(7)
-                || !respeitaRegraCircularesEOficios(documento, processo)) // (5)
-
-            {
+                || !respeitaRegraCircularesEOficios(documento, processo)){ // (5)
 
             return false;
         }
         return true;
     }
 
-
     // esse metodo serve p calcular a qtd de paginas ja existentes em um processo
     // criei ele para evitar repeticao de codigo pq precisei dele mais de uma vez
-
     private int calcularPaginasProcesso(Processo processo) {
         int total = 0;
         for (Documento doc : processo.pegarCopiaDoProcesso()) { // percorre cada documento existente no processo
@@ -212,35 +208,35 @@ public class Burocrata {
         return true; // se for menor, respeita o limite
     }
 
-    // (1) Um processo não pode conter Documentos de cursos de graduação
-    // e cursos de pósgraduação ao mesmo tempo quando for despachado.
-
-    // baseado nessa espec, esse metodo verifica se ha mistura de docs de graduacao e pos:
+    // (1) Um processo nao pode conter Documentos de cursos de graduacao
+    // e cursos de posgraduacao ao mesmo tempo quando for despachado.
+    // baseado nessa especificacao, esse metodo verifica se ha mistura de docs de graduacao e pos:
     private boolean respeitaGradEPos(Documento documento, Processo processo, CodigoCurso codigo){
         Documento[] documentosDoProcesso = processo.pegarCopiaDoProcesso();
         boolean novoEhGraduacao = false;
 
-        if(codigo.name().startsWith("GRADUACAO")){
-            novoEhGraduacao = true;
+        if(codigo.name().startsWith("GRADUACAO")){ // se o novo doc do procesos eh de graduacao
+            novoEhGraduacao = true; // sinaliza
         }
 
-        for(Documento doc : documentosDoProcesso){
+        for(Documento doc : documentosDoProcesso){ // percorre todos os docs existentes no processo
             boolean existenteEhGraduacao = false;
-            if(doc.getCodigoCurso().name().startsWith("GRADUACAO")){
+            if(doc.getCodigoCurso().name().startsWith("GRADUACAO")){ // verifica se sao todos de graduacao
                 existenteEhGraduacao = true;
             }
 
-            if(novoEhGraduacao != existenteEhGraduacao){
-                return false;
+            if(novoEhGraduacao != existenteEhGraduacao){ // se conflitarem grad X pos grad
+                return false; // nao respeita a regra
             }
         }
 
         return true;
     }
 
-    /*(2) Um processo não pode misturar Documentos Administrativos e Documentos Acadêmicos,
-    mas atas podem estar em qualquer processo. Assim, uma Norma não pode ser despachada
-    junto de um Histórico no mesmo processo, por exemplo*/
+    /*(2) Um processo nao pode misturar Documentos Administrativos e Documentos Academicos,
+    mas atas podem estar em qualquer processo. Assim, uma Norma nao pode ser despachada
+    junto de um Historico no mesmo processo, por exemplo*/
+    // esse metodo verifica o cumprimento da regra acima:
     private boolean respeitaAcademicoAdministrativo(Documento documento, Processo processo){
         if (documento instanceof Ata) {
             return true; // atas podem ser colocadas com qualquer um dos documentos
@@ -264,64 +260,72 @@ public class Burocrata {
                 continue;
             }
 
-            if (novoEhAcademico && doc instanceof DocumentoAdministrativo) {
-                return false;
+            if (novoEhAcademico && doc instanceof DocumentoAdministrativo) { // se mistura academico e administrativo
+                return false; // nao respeita a regra
             }
 
-            if (novoEhAdministrativo && doc instanceof DocumentoAcademico) {
-                return false;
+            if (novoEhAdministrativo && doc instanceof DocumentoAcademico) { // se mistura administrativo e academico
+                return false; // nao respeita a regra
             }
+            // faz as duas verificacoes pq a ordem importa
         }
         return true;
     }
 
-    /*(3) Um processo não pode ser despachado apenas com Atas.*/
-
+    /*(3) Um processo nao pode ser despachado apenas com Atas.*/
+    // esse metodo verifica o cumprimento da regra acima:
     private boolean respeitaRegraAtas(Documento documento, Processo processo) {
         Documento[] documentosDoProcesso = processo.pegarCopiaDoProcesso();
+
+        // aicionei essa verificacao antes de setar a flag p garantir que o primeiro doc de um processo possa ser ata
+        // antes nao estava permitindo iniciar processos com atas
+        if(documentosDoProcesso.length == 0){
+            return true;
+        }
+
         boolean todasAtas = true;
-        for (Documento documentoDoProcesso : documentosDoProcesso) {
-            if (!(documentoDoProcesso instanceof Ata)) {
-                todasAtas = false;
+        for (Documento documentoDoProcesso : documentosDoProcesso) { // percorre todos os documentos do processo
+            if (!(documentoDoProcesso instanceof Ata)) { // se algum nao for ata
+                todasAtas = false; // nao sao todos atas
             }
         }
 
-        if (todasAtas == true && (documento instanceof Ata)) {
-            return false;
+        if (todasAtas == true && (documento instanceof Ata)) { // se todos sao atas e quer add mais uma ata
+            return false; // nao respeita a regra
         }
         return true;
     }
 
-   /* (4) Uma Portaria ou um Edital com 100 ou mais páginas é um “documento substancial” e
+   /* (4) Uma Portaria ou um Edital com 100 ou mais páginas eh um “documento substancial” e
     deve ser despachado em um processo sem qualquer outro documento junto. Contudo,
-    Portarias e Editais que não sejam mais válidos podem ir junto de outros documentos mesmo
+    Portarias e Editais que nao sejam mais validos podem ir junto de outros documentos mesmo
     que sejam substanciais */
 
     // metodo que verifica se o doc eh substancial e valido p despachar em um processo sem outros docs
     // se retornar falso, tratar da alocacao dele com outros docs em um processo
-
     private boolean ehSubstancialValido(Documento doc){
-        if(doc instanceof Edital){ // verifica se é edital
+        if(doc instanceof Edital){ // verifica se eh edital
             Edital edital = (Edital) doc;
-            // retorna true se tem mais de 100 pag e é valido (condicao p ser substancial)
+            // retorna true se tem mais de 100 pag e eh valido (condicao p ser substancial)
             return edital.getPaginas() >= 100 && edital.isValido();
         }
 
-        if(doc instanceof Portaria){ // verifica se é portaria
+        if(doc instanceof Portaria){ // verifica se eh portaria
             Portaria portaria = (Portaria) doc;
-            // retorna true se tem mais de 100 pag e é valido (condicao p ser substancial)
+            // retorna true se tem mais de 100 pag e eh valido (condicao p ser substancial)
             return portaria.getPaginas() >= 100 && portaria.isValido();
         }
 
         return false;
     }
 
-        /* (5) Diferentes Circulares e Oficios so podem ser despachados no mesmo processo se tiverem
-        um destinatario em comum. Por exemplo, um Ofício para “Ana Moura”, uma Circular para
-        “Dulce Pontes” e “Ana Moura”, e uma Circular para “Ana Moura”, “Antonio Variacoes” e
-        “Amalia Rodrigues” podem ser despachados juntos no mesmo processo, porque Ana Moura
-        eh o destinatario comum entre todos. */
+    /*(5) Diferentes Circulares e Oficios so podem ser despachados no mesmo processo se tiverem
+    um destinatario em comum. Por exemplo, um Ofício para “Ana Moura”, uma Circular para
+    “Dulce Pontes” e “Ana Moura”, e uma Circular para “Ana Moura”, “Antonio Variacoes” e
+    “Amalia Rodrigues” podem ser despachados juntos no mesmo processo, porque Ana Moura
+    eh o destinatario comum entre todos.
 
+    esse metodo verifica o cumprimento da regra acima: */
     private boolean respeitaRegraCircularesEOficios(Documento documento, Processo processo) {
         String[] destsNovoDoc = pegarDestinatarios(documento); // pega destinatarios do novo doc
 
@@ -338,15 +342,15 @@ public class Burocrata {
             }
             boolean ehComum = true;
 
-            // testa esse candidato com todos os docs do processo
+            // testa esse candidato a comum com todos os destinatarios de todos os docs do processo
             for(Documento docExistente : docsExistentes){
-                String[] destsExistente = pegarDestinatarios(docExistente);
+                String[] destsExistente = pegarDestinatarios(docExistente); // array p guardar os destinatarios dos docs do processo
 
                 if(destsExistente != null){
                     boolean achouNesseDoc = false;
                     for(String dest : destsExistente){
-                        if(candidato.equals(dest)){
-                            achouNesseDoc = true;
+                        if(candidato.equals(dest)){ // se o candidato a destinatario eh igual a algum destinatario de outro doc
+                            achouNesseDoc = true; // achou comum
                             break;
                         }
                     }
@@ -357,17 +361,18 @@ public class Burocrata {
                     }
                 }
             }
-            // se o candidato a des comum era realmente comum a todos
+            // se o candidato a dest comum era realmente comum a todos
             if(ehComum){
                 return true; // respeitou a regra
             }
         }
-        // se testou todos os candidatos a dest comum e nenhum foi comum a todod
+        // se testou todos os candidatos a dest comum e nenhum foi comum a todos
         return false; // nao respeitou a regra
     }
 
     // inicio do codigo gerado por IA:
-    // Método auxiliar simples para extrair destinatários como array de String
+    // esse metodo serve para extrair destinatarios como um array de strings p fazer comparacao de
+    // destinatarios comuns
     private String[] pegarDestinatarios(Documento doc) {
         if (doc instanceof Oficio) {
             Oficio oficio = (Oficio) doc;
@@ -386,6 +391,7 @@ public class Burocrata {
 
 
     // (6) Diplomas so podem ser despachados junto de outros Diplomas, Certificados ou Atas.
+    // esse metodo verifica o cumprimento da regra acima:
     private boolean respeitaRegraDiploma(Documento documento, Processo processo){
         Documento[] documentosDoProcesso = processo.pegarCopiaDoProcesso();
 
@@ -412,6 +418,7 @@ public class Burocrata {
     }
 
     //(7) Atestados de diferentes categorias nao podem estar em um mesmo processo.
+    // esse metodo verifica o cumprimento da regra acima:
     private boolean respeitaRegraAtestados(Documento documento, Processo processo){
         if (!(documento instanceof Atestado)) { // se o novo documento nao eh atestado, nao precisa verificar
             return true;
@@ -433,7 +440,20 @@ public class Burocrata {
         return true;
     }
 
+    // (3) Um processo não pode ser despachado apenas com Atas.
+    // esse metodo verifica se um processo tem apenas atas p bloquear o despache se retornar true:
+    private boolean temApenasAtas(Processo processo){
+        if(processo.contarDocumentos() == 0){ // se o processo nao tem documentos
+            return false; // nao tem apenas atas
+        }
 
+        for(Documento doc : processo.pegarCopiaDoProcesso()){ // percorre todos os documentos do processo
+            if(!(doc instanceof Ata )) { // se algum nao for ata
+                return false; // nao tem apenas atas
+            }
+        }
+        return true; // se nao achou nenhum doc diferente de ata, tem apenas atas
+    }
 
     /**
      * Retorna o valor atual de estresse do burocrata.
