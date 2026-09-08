@@ -20,6 +20,13 @@ public class Burocrata {
     private int estresse = 0;
     private Mesa mesa;
     private Universidade universidade;
+     /*
+    CodigoCurso[] ordemCursos = {
+                CodigoCurso.POS_GRADUACAO_COMPUTACAO, CodigoCurso.POS_GRADUACAO_ENGENHARIA_ELETRICA, CodigoCurso.POS_GRADUACAO_MICROELETRONICA, // prioridade p cursos de pos
+                CodigoCurso.GRADUACAO_BIOTECNOLOGIA, CodigoCurso.GRADUACAO_CIENCIA_DA_COMPUTACAO, CodigoCurso.GRADUACAO_CIENCIA_DE_DADOS,
+                CodigoCurso.GRADUACAO_CIENCIA_E_TECNOLOGIA, CodigoCurso.GRADUACAO_ENGENHARIA_DE_AUTOMACAO, CodigoCurso.GRADUACAO_ENGENHARIA_DE_COMPUTACAO, CodigoCurso.GRADUACAO_ENGENHARIA_ELETRICA  // cursos de grad depois
+        };
+    */
     
     /**
      * Construtor de Burocrata.
