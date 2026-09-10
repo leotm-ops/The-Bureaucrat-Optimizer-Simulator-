@@ -20,14 +20,15 @@ public class Burocrata {
     private int estresse = 0;
     private Mesa mesa;
     private Universidade universidade;
-     /*
+
+    // array para que o burocrata analise primeiro os docs de pos pois sao gerados com mais frequencia (empirico)
     CodigoCurso[] ordemCursos = {
-                CodigoCurso.POS_GRADUACAO_COMPUTACAO, CodigoCurso.POS_GRADUACAO_ENGENHARIA_ELETRICA, CodigoCurso.POS_GRADUACAO_MICROELETRONICA, // prioridade p cursos de pos
-                CodigoCurso.GRADUACAO_BIOTECNOLOGIA, CodigoCurso.GRADUACAO_CIENCIA_DA_COMPUTACAO, CodigoCurso.GRADUACAO_CIENCIA_DE_DADOS,
-                CodigoCurso.GRADUACAO_CIENCIA_E_TECNOLOGIA, CodigoCurso.GRADUACAO_ENGENHARIA_DE_AUTOMACAO, CodigoCurso.GRADUACAO_ENGENHARIA_DE_COMPUTACAO, CodigoCurso.GRADUACAO_ENGENHARIA_ELETRICA  // cursos de grad depois
-        };
-    */
-    
+            CodigoCurso.POS_GRADUACAO_COMPUTACAO, CodigoCurso.POS_GRADUACAO_ENGENHARIA_ELETRICA, CodigoCurso.POS_GRADUACAO_MICROELETRONICA, // prioridade p cursos de pos
+            CodigoCurso.GRADUACAO_BIOTECNOLOGIA, CodigoCurso.GRADUACAO_CIENCIA_DA_COMPUTACAO, CodigoCurso.GRADUACAO_CIENCIA_DE_DADOS,
+            CodigoCurso.GRADUACAO_CIENCIA_E_TECNOLOGIA, CodigoCurso.GRADUACAO_ENGENHARIA_DE_AUTOMACAO, CodigoCurso.GRADUACAO_ENGENHARIA_DE_COMPUTACAO, CodigoCurso.GRADUACAO_ENGENHARIA_ELETRICA  // cursos de grad depois
+    };
+
+
     /**
      * Construtor de Burocrata.
      * 
@@ -38,7 +39,7 @@ public class Burocrata {
         this.mesa = m;
         this.universidade = u;
     }
-    
+
     /**
      * Executa a lógica de criação e despacho dos processos.
      * <br><br>
@@ -69,12 +70,7 @@ public class Burocrata {
 
     //------ esse eh o unico metodo chamado pelo simulador, ele contem toda a logica de trabalho do burocrata com metodos auxiliares -------
     public void trabalhar() {
-        // array para que o burocrata analise primeiro os docs de pos pois sao gerados com mais frequencia (empirico)
-        CodigoCurso[] ordemCursos = {
-                CodigoCurso.POS_GRADUACAO_COMPUTACAO, CodigoCurso.POS_GRADUACAO_ENGENHARIA_ELETRICA, CodigoCurso.POS_GRADUACAO_MICROELETRONICA, // prioridade p cursos de pos
-                CodigoCurso.GRADUACAO_BIOTECNOLOGIA, CodigoCurso.GRADUACAO_CIENCIA_DA_COMPUTACAO, CodigoCurso.GRADUACAO_CIENCIA_DE_DADOS,
-                CodigoCurso.GRADUACAO_CIENCIA_E_TECNOLOGIA, CodigoCurso.GRADUACAO_ENGENHARIA_DE_AUTOMACAO, CodigoCurso.GRADUACAO_ENGENHARIA_DE_COMPUTACAO, CodigoCurso.GRADUACAO_ENGENHARIA_ELETRICA  // cursos de grad depois
-        };
+        this.ordemCursos = recalcularOrdemPorQuantidade();
 
         boolean processandoPos = true;
 
@@ -104,6 +100,9 @@ public class Burocrata {
                 }
             }
         }
+
+        //contador_ordem = ++contador_ordem;
+
     }
     // ---------------------------------------------------------------------------------------------------------------------
 
@@ -394,6 +393,21 @@ public class Burocrata {
 
         return null; // Não é Ofício nem Circular
     }
+    private CodigoCurso[] recalcularOrdemPorQuantidade() {
+        CodigoCurso[] todosCursos = CodigoCurso.values();
+
+        // Converte para Integer/Array para podermos usar um Comparator customizado
+        java.util.Arrays.sort(todosCursos, (c1, c2) -> {
+            int qtdC1 = universidade.pegarCopiaDoMonteDoCurso(c1).length;
+            int qtdC2 = universidade.pegarCopiaDoMonteDoCurso(c2).length;
+
+            // Ordenação decrescente: compara C2 com C1 (maior primeiro)
+            return Integer.compare(qtdC2, qtdC1);
+        });
+
+        return todosCursos;
+    }
+
     // fim do codigo gerado por IA
 
 
