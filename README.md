@@ -41,6 +41,3 @@ Developed for a Software Development course challenge at UFRGS."
 2. Navigate to `src/SimuladorGUI.java`.
 3. Execute the `main` method to start the visual simulator and track real-time metrics, including the stress level indicator, created vs. dispatched document counts, and the overall efficiency rating (automatically provided after the 120-second simulation).
    
-
-    ├── Processo.java
-    └── Universidade.java
