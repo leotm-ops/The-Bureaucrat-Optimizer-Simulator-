@@ -6,10 +6,10 @@ import professor.entidades.*;
  * Classe que traz a lógica do algoritmo de organização e despacho de processos.
  * <br><br>
  * Você pode incluir novos atributos e métodos nessa classe para criar
- * lógicas mais complexas para o gerenciamento da organização e despacho de 
+ * lógicas mais complexas para o gerenciamento da organização e despacho de
  * processos, mas eles não serão invocados diretamente pelo simulador e devem
  * respeitar propriedades de encapsulamento e coesão.
- * 
+ *
  * @autor Lara Moreira
  * @autor Leonardo Maraschin
  * @autor Ana Laura Führ
@@ -28,10 +28,9 @@ public class Burocrata {
             CodigoCurso.GRADUACAO_CIENCIA_E_TECNOLOGIA, CodigoCurso.GRADUACAO_ENGENHARIA_DE_AUTOMACAO, CodigoCurso.GRADUACAO_ENGENHARIA_DE_COMPUTACAO, CodigoCurso.GRADUACAO_ENGENHARIA_ELETRICA  // cursos de grad depois
     };
 
-
     /**
      * Construtor de Burocrata.
-     * 
+     *
      * @param m mesa com os processos
      * @param u universidade com os montes dos cursos e a secretaria
      */
@@ -43,11 +42,11 @@ public class Burocrata {
     /**
      * Executa a lógica de criação e despacho dos processos.
      * <br><br>
-     * Esse método é o único método de controle invocado durante a simulação 
+     * Esse método é o único método de controle invocado durante a simulação
      * da universidade.
      * <br><br>
-     * Aqui podem ser feitas todas as verificações sobre os documentos nos 
-     * montes dos cursos e dos processos abertos na mesa do Burocrata. A partir 
+     * Aqui podem ser feitas todas as verificações sobre os documentos nos
+     * montes dos cursos e dos processos abertos na mesa do Burocrata. A partir
      * dessas informações, você pode colocar documentos nos processos abertos
      * e despachar os processos para a secretaria acadêmica.
      * <br><br>
@@ -62,10 +61,10 @@ public class Burocrata {
      * que o método trabalhar terminar de executar, ou seja, você deve devolver
      * para os montes dos cursos todos os documentos que você removeu dos montes
      * dos cursos.
-     * 
+     *
      * @see professor.entidades.Universidade#despachar(Processo)
      * @see professor.entidades.Universidade#removerDocumentoDoMonteDoCurso(estudantes.entidades.Documento, professor.entidades.CodigoCurso)
-     * @see professor.entidades.Universidade#devolverDocumentoParaMonteDoCurso(estudantes.entidades.Documento, professor.entidades.CodigoCurso) 
+     * @see professor.entidades.Universidade#devolverDocumentoParaMonteDoCurso(estudantes.entidades.Documento, professor.entidades.CodigoCurso)
      */
 
     //------ esse eh o unico metodo chamado pelo simulador, ele contem toda a logica de trabalho do burocrata com metodos auxiliares -------
@@ -79,7 +78,7 @@ public class Burocrata {
             boolean atualEhPos = codigo.name().startsWith("POS_GRADUACAO");
             if(processandoPos && !atualEhPos){ // se o processo atual eh de pos e pegou um doc de graduacao
                 for(Processo processoAtual : mesa.getProcessos()){
-                    if(processoAtual != null && processoAtual.contarDocumentos() > 0 && !temApenasAtas(processoAtual)){
+                    if(processoAtual != null && calcularPaginasProcesso(processoAtual) >= 245 &&  !temApenasAtas(processoAtual)){
                         universidade.despachar(processoAtual); // despacha processo atual
                     }
                 }
@@ -88,23 +87,20 @@ public class Burocrata {
 
             Documento[] documentos = universidade.pegarCopiaDoMonteDoCurso(codigo);
 
-            // analisa cada documento um a um
+            // analisa cada documento um a um,
             for(Documento doc : documentos){
                 // verifica se o doc atual eh substancial e valido
                 if(ehSubstancialValido(doc)){
                     despacharDocSubstancial(doc, codigo); // despacha
                 }
-                // se nao for, tenta alocar em algum processo da mesa
-                else {
+                else{
                     alocaEDespachaDocComum(doc, codigo);
                 }
             }
         }
-
-        //contador_ordem = ++contador_ordem;
-
     }
     // ---------------------------------------------------------------------------------------------------------------------
+
 
     // metodo p achar um processo vazio para colocar documentos:
     private Processo encontrarProcessoVazio(){
@@ -117,7 +113,6 @@ public class Burocrata {
         }
         return null; // null se nao encontrou nenhum processo vazio
     }
-
 
     // metodo responsavel por despachar documentos substanciais validos:
     private boolean despacharDocSubstancial(Documento doc, CodigoCurso codigo){
@@ -149,9 +144,8 @@ public class Burocrata {
                 boolean removido = universidade.removerDocumentoDoMonteDoCurso(doc, codigo);
                 if(removido == true){ // adiciona documento no processo
                     processo.adicionarDocumento(doc);
-
                     // se o processo atingiu 200 pags
-                    if(calcularPaginasProcesso(processo) >= 230 && !temApenasAtas(processo)){
+                    if(calcularPaginasProcesso(processo) == 250 && !temApenasAtas(processo)){
                         universidade.despachar(processo); // ja despacha p liberar a mesa p um novo processo
                     }
                     return true;
@@ -166,20 +160,18 @@ public class Burocrata {
     private boolean podeAddDocumento(Documento documento, Processo processo, CodigoCurso codigo){
         // Contudo, Portarias e Editais que nao sejam mais validos podem ir junto de outros documentos mesmo
         // que sejam substanciais.
-
         if (ehSubstancialValido(documento) == true) { // (4)
             return false;
         }
 
         // so pode adicionar documentos no proceso se respeitar as regras p nao estressar o burocrata
-        if(!respeitaAcademicoAdministrativo(documento, processo) //(2)
-                || !respeitaGradEPos(documento, processo, codigo) //(1)
-                || !respeitaQtdDePags(documento, processo) // ()
-                || !respeitaRegraDiploma(documento, processo) //(6)
-                || !respeitaRegraAtas(documento, processo) // (4)
-                || !respeitaRegraAtestados(documento, processo) //(7)
-                || !respeitaRegraCircularesEOficios(documento, processo)){ // (5)
-
+        if(!respeitaAcademicoAdministrativo(documento, processo)
+                || !respeitaGradEPos(documento, processo, codigo)
+                || !respeitaQtdDePags(documento, processo)
+                || !respeitaRegraDiploma(documento, processo)
+                || !respeitaRegraAtas(documento, processo)
+                || !respeitaRegraAtestados(documento, processo)
+                || !respeitaRegraCircularesEOficios(documento, processo)) { // (5)
             return false;
         }
         return true;
@@ -235,7 +227,6 @@ public class Burocrata {
                 return false; // nao respeita a regra
             }
         }
-
         return true;
     }
 
@@ -249,7 +240,6 @@ public class Burocrata {
         }
 
         Documento[] documentosDoProcesso = processo.pegarCopiaDoProcesso();
-
         boolean novoEhAdministrativo = false;
         boolean novoEhAcademico = false;
 
@@ -302,7 +292,7 @@ public class Burocrata {
         return true;
     }
 
-   /* (4) Uma Portaria ou um Edital com 100 ou mais páginas eh um “documento substancial” e
+    /* (4) Uma Portaria ou um Edital com 100 ou mais páginas eh um “documento substancial” e
     deve ser despachado em um processo sem qualquer outro documento junto. Contudo,
     Portarias e Editais que nao sejam mais validos podem ir junto de outros documentos mesmo
     que sejam substanciais */
@@ -321,7 +311,6 @@ public class Burocrata {
             // retorna true se tem mais de 100 pag e eh valido (condicao p ser substancial)
             return portaria.getPaginas() >= 100 && portaria.isValido();
         }
-
         return false;
     }
 
@@ -393,9 +382,11 @@ public class Burocrata {
 
         return null; // Não é Ofício nem Circular
     }
+
     private CodigoCurso[] recalcularOrdemPorQuantidade() {
         CodigoCurso[] todosCursos = CodigoCurso.values();
 
+        // inicio do codigo gerado por IA:
         // Converte para Integer/Array para podermos usar um Comparator customizado
         java.util.Arrays.sort(todosCursos, (c1, c2) -> {
             int qtdC1 = universidade.pegarCopiaDoMonteDoCurso(c1).length;
@@ -404,11 +395,9 @@ public class Burocrata {
             // Ordenação decrescente: compara C2 com C1 (maior primeiro)
             return Integer.compare(qtdC2, qtdC1);
         });
-
         return todosCursos;
     }
-
-    // fim do codigo gerado por IA
+    // fim do codigo gerado por IA.
 
 
     // (6) Diplomas so podem ser despachados junto de outros Diplomas, Certificados ou Atas.
@@ -433,7 +422,6 @@ public class Burocrata {
                     return false;
                 }
             }
-
         }
         return true;
     }
@@ -484,19 +472,19 @@ public class Burocrata {
     public int getEstresse(){
         return this.estresse;
     }
-    
+
     /**
      * Aumenta o estresse do burocrata em uma unidade.
-     * 
+     *
      * <strong>VOCÊ NÃO DEVERIA INVOCAR ESSE MÉTODO!!!</strong>
      */
     public void estressar(){
         this.estresse++;
     }
-    
+
     /**
      * Aumenta o estresse do burocrata em 10 unidades.
-     * 
+     *
      * <strong>VOCÊ NÃO DEVERIA INVOCAR ESSE MÉTODO!!!</strong>
      */
     public void estressarMuito(){

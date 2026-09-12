@@ -7,7 +7,9 @@ import professor.entidades.CodigoCurso;
  * <br><br>
  * <strong>Seu trabalho começa aqui...</strong>
  *
- * @author coloque os nomes dos autores aqui
+ * @author Lara Moreira
+ * @author Leonardo Maraschin
+ * @author Ana Laura Führ
  */
 
 public abstract class Documento {

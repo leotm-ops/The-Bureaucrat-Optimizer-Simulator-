@@ -3,7 +3,6 @@ package estudantes.entidades;
 import java.util.Objects;
 import professor.entidades.CodigoCurso;
 
-
 public class Diploma extends Certificado{
     private String habilitacao;
 
