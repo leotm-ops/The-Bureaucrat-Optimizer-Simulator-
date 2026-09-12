@@ -28,11 +28,11 @@ Developed for a Software Development course challenge at UFRGS."
 
 ## Implemented Optimization Strategies
 
-**Dynamic Queue Sorting by Volume:** Recalculates department processing order by sorting courses in descending order based on the total number of documents currently stacked in each course's stack.
-**First-Fit Allocation Strategy:** Scans table processes sequentially and allocates an incoming common document into the first valid process that satisfies all regulatory rules.
-**Immediate Substantial Isolation:** Scans for valid substantial documents and dispatches them immediately using a dedicated empty process.
-**Phase-Transition Flush:** When transitioning processing from Post-Graduate to Undergraduate queues, automatically dispatches active processes exceeding 245 pages to clear table space.
-**Exact Limit Dispatch:** Instantly dispatches a process as soon as its cumulative page count reaches the exact maximum capacity of 250 pages.
+* **Dynamic Queue Sorting by Volume:** Recalculates department processing order by sorting courses in descending order based on the total number of documents currently stacked in each course's stack.
+* **First-Fit Allocation Strategy:** Scans table processes sequentially and allocates an incoming common document into the first valid process that satisfies all regulatory rules.
+* **Immediate Substantial Isolation:** Scans for valid substantial documents and dispatches them immediately using a dedicated empty process.
+* **Phase-Transition Flush:** When transitioning processing from Post-Graduate to Undergraduate queues, automatically dispatches active processes exceeding 245 pages to clear table space.
+* **Exact Limit Dispatch:** Instantly dispatches a process as soon as its cumulative page count reaches the exact maximum capacity of 250 pages.
 ---
 
 ## How to Run
